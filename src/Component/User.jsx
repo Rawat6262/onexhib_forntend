@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
-import VerticalMenu from "./Menu";
+import VerticalMenu from "./menu";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 // import PopupForms from "./ExhibitionDetail";
 import PopupForms from "./companypopup";
 import ExhibitionPopup from "./Exhibitionpop";
 import { toast } from "sonner";
+import CompanyEditPopup from "../Admin/Companyupdatepopup";
 
 function User() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ function User() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+    const [editingId, setEditingId] = useState(null);
 
   const itemsPerPage = 5;
 
@@ -182,18 +184,17 @@ function User() {
           <div className="flex-1 w-full overflow-x-auto text-left mt-6">
             <table className="w-full min-w-[700px] border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-gray-200 text-gray-800 border-b border-gray-300">
-                  {["#", "Company Name", "Email", "Phone", "Action"].map(
-                    (header) => (
-                      <th
-                        key={header}
-                        className="px-4 py-3 border-r border-gray-300 last:border-r-0"
-                      >
-                        {header}
-                      </th>
-                    )
-                  )}
-                </tr>
+              <tr className="bg-gray-200 text-gray-800 border-b border-gray-300 text-center">
+  {["#", "Company Name", "Email", "Phone", "Action"].map((header) => (
+    <th
+      key={header}
+      className="px-4 py-3 border-r border-gray-300 last:border-r-0 text-center"
+    >
+      {header}
+    </th>
+  ))}
+</tr>
+
               </thead>
               <tbody>
                 {paginatedCompanies.length === 0 ? (
@@ -208,36 +209,53 @@ function User() {
                 ) : (
                   paginatedCompanies.map((c, index) => (
                     <tr
-                      key={c._id || index}
-                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    >
-                      <td className="px-4 py-3 border border-gray-300">
-                        {startIndex + index + 1}
-                      </td>
-                      <td className="px-4 py-3 border border-gray-300">
-                        {c.company_name}
-                      </td>
-                      <td className="px-4 py-3 border border-gray-300">
-                        {c.company_email}
-                      </td>
-                      <td className="px-4 py-3 border border-gray-300">
-                        {c.company_phone_number}
-                      </td>
-                      <td className="px-4 py-3 border border-gray-300">
-                        <button
-                          onClick={() => navigate(`/company/${c._id}`)}
-                          className="border border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
+  key={c._id || index}
+  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+>
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {startIndex + index + 1}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {c.company_name}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {c.company_email}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {c.company_phone_number}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 flex justify-center gap-4">
+    <button
+      onClick={() => navigate(`/company/${c._id}`)}
+      className="border border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
+    >
+      View
+    </button>
+
+    <button
+      onClick={() => setEditingId(c._id)}
+      className="flex items-center gap-1 px-3 py-1 border border-green-500 text-green-500 rounded-md hover:bg-green-100 transition"
+    >
+      Edit
+    </button>
+  </td>
+</tr>
+
+
                   ))
                 )}
               </tbody>
             </table>
           </div>
-
+<CompanyEditPopup
+      open={Boolean(editingId)}
+      companyId={editingId}
+      onClose={() => setEditingId(null)}
+    />
           {/* Pagination */}
           <div className="mt-6 flex justify-center gap-4 items-center">
             <button

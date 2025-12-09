@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import VerticalMenu from "./Menu";
+import VerticalMenu from "./menu";
 import ProductPopupForm from "./Product_popup";
+import { toast } from "sonner";
 
 export default function CompanyDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [company, setCompany] = useState({});
   const [products, setProducts] = useState([]);
@@ -23,6 +25,19 @@ export default function CompanyDetail() {
     }
   }, [id]);
 
+   const deletecompany = async () => {
+    try {
+      if (!window.confirm("Are you sure you want to delete this company?"))
+        return;
+        console.log(company._id,id)
+      await axios.delete(`/api/delete/company/${company._id}`);
+      toast.success("Company deleted successfully!");
+      navigate(`/organiser/${company.createdBy}`); // ✅ fixed route
+    } catch (err) {
+      console.error("❌ Error deleting Company:", err);
+      toast.error("Failed to delete Company");
+    }
+  };
   /** ✅ Fetch company with memoized function */
   const fetchCompany = useCallback(async () => {
     try {
@@ -70,17 +85,38 @@ export default function CompanyDetail() {
       <main className="flex-1 mt-2 md:ml-10 p-4 sm:p-6">
         <div className="bg-white rounded-lg shadow-md border border-gray-300 p-4 sm:p-6">
           {/* HEADER */}
-          <header className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-300 pb-4">
-            <h1 className="font-bold text-2xl sm:text-3xl">
-              {company.company_name || "Loading..."}
-            </h1>
-            <button
-              onClick={handleBrochureDownload}
-              className="h-10 w-full sm:w-64 border border-blue-600 text-blue-600 bg-white hover:bg-blue-600 hover:text-white rounded-md font-semibold transition-colors"
-            >
-              Download Brochure
-            </button>
-          </header>
+         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-300 pb-4">
+
+  {/* Title */}
+  <h1 className="font-bold text-2xl sm:text-3xl">
+    {company.company_name || "Loading..."}
+  </h1>
+
+  {/* Button Group */}
+  <div className="flex items-center gap-3">
+
+    {/* Delete Company */}
+    <button
+      className="px-4 py-2 border border-red-600 text-red-600 bg-white rounded-md font-semibold 
+                 hover:bg-red-600 hover:text-white transition-colors"
+      onClick={()=>deletecompany()  }
+    >
+      Delete Company
+    </button>
+
+    {/* Download Brochure */}
+    <button
+      onClick={handleBrochureDownload}
+      className="px-4 py-2 border border-blue-600 text-blue-600 bg-white rounded-md font-semibold 
+                 hover:bg-blue-600 hover:text-white transition-colors"
+    >
+      Download Brochure
+    </button>
+
+  </div>
+
+</header>
+
 
           {/* SUMMARY */}
           <section className="mt-6 flex flex-wrap gap-4">
@@ -207,31 +243,44 @@ function ProductTable({ paginatedData, startIndex }) {
             </tr>
           ) : (
             paginatedData.map((item, index) => (
-              <tr
-                key={item._id || index}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-              >
-                <td className="px-4 py-3 border border-gray-300">
-                  {startIndex + index + 1}
-                </td>
-                <td className="px-4 py-3 border border-gray-300">
-                  {item.product_name}
-                </td>
-                <td className="px-4 py-3 border border-gray-300">
-                  {item.category}
-                </td>
-                <td className="px-4 py-3 border border-gray-300">
-                  {item.price}
-                </td>
-                <td className="px-4 py-3 border border-gray-300 flex gap-2">
-                  <button className="px-3 py-1 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-600 hover:text-white transition-colors">
-                    View
-                  </button>
-                  <button className="px-3 py-1 border border-red-600 text-red-600 rounded-md hover:bg-red-600 hover:text-white transition-colors">
-                    Edit
-                  </button>
-                </td>
-              </tr>
+      <tr
+  key={item._id || index}
+  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+>
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {startIndex + index + 1}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {item.product_name}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    {item.category}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 text-center">
+    ₹{item.price}
+  </td>
+
+  <td className="px-4 py-3 border border-gray-300 flex justify-center gap-4">
+    <button
+      onClick={() => navigate(`/product/${item._id}`)}
+      className="border border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
+    >
+      View
+    </button>
+
+    <button
+      onClick={() => setEditingId(item._id)}
+      className="flex items-center gap-1 px-3 py-1 border border-green-500 text-green-500 rounded-md hover:bg-green-100 transition"
+    >
+      Edit
+    </button>
+  </td>
+</tr>
+
+
             ))
           )}
         </tbody>

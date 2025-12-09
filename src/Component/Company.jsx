@@ -6,7 +6,7 @@ import React, {
 } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import VerticalMenu from "./Menu";
+import VerticalMenu from "./menu";
 import ProductPopupForm from "./Product_popup";
 
 export default function CompanyDetail() {
@@ -118,6 +118,7 @@ export default function CompanyDetail() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-3 sm:mt-0">
+            
             <button
               onClick={handleBrochureDownload}
               disabled={!company?._id}

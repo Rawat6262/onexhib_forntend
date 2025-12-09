@@ -32,7 +32,7 @@ export default function App() {
           <Route path="/api/Signup" element={<SignupForms />} />
           <Route path="/api/Company" element={<Company />} />
           <Route path="/api/organiser" element={<Organiser />} />
-          <Route path="/organiser/:id" element={<User/>} />
+          <Route path="/organiser/delete" element={<User/>} />
           <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/api/admin/dashboard" element={<AdminDashboard/>} />
           <Route path="/api/admin/organiser" element={<AdminOrganiser />} />
@@ -41,7 +41,7 @@ export default function App() {
           <Route path="/api/Admin/Products" element={<AdminProducts />} />
             <Route path="/company/:id" element={<CompanyDetail />} />
         </Routes>
-      <Toaster position="top-center" richColors />
+      <Toaster position="top-center" richColors  />
     </>
   );
 }

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import VerticalMenu from "./Menu";
+import VerticalMenu from "./menu";
 import PopupForm from "./PopupForm";
 import ExhibitionPopup from "./Exhibitionpop";
 import OrganiserPopup from "./OrganiserDetails";
+import ExhibitionEditPopup from "../Admin/organiserupdate";
 
 const Organiser = () => {
   const [showorganiser, setorganiser] = useState(false);
@@ -15,6 +16,7 @@ const Organiser = () => {
   const itemsPerPage = 5;
   const [id,setId] = useState(null)
   const navigate = useNavigate();
+  const [editingId, setEditingId] = useState(null);
   
   // Fetch exhibitions
   const fetchExhibitions = async () => {
@@ -151,27 +153,56 @@ const Organiser = () => {
                   </tr>
                 ) : (
                   paginatedData.map((item, index) => (
-                    <tr key={item._id || index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-4 py-3 border border-gray-300">{startIndex + index + 1}</td>
-                      <td className="px-4 py-3 border border-gray-300">{item.addedBy}</td>
-                      <td className="px-4 py-3 border border-gray-300">{item.exhibition_name}</td>
-                      <td className="px-4 py-3 border border-gray-300">{item.exhibition_address}</td>
-                      <td className="px-4 py-3 border border-gray-300">{item.category}</td>
-                      <td className="px-4 py-3 border border-gray-300">
-                        <button
-                          className="border-2 border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
-                          onClick={() => navigate(`/organiser/${item._id}`)}
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
+                   <tr
+    key={item._id || index}
+    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+  >
+    <td className="px-4 py-3 border border-gray-300">
+      {startIndex + index + 1}
+    </td>
+
+    <td className="px-4 py-3 border border-gray-300">
+      {item.addedBy}
+    </td>
+
+    <td className="px-4 py-3 border border-gray-300">
+      {item.exhibition_name}
+    </td>
+
+    <td className="px-4 py-3 border border-gray-300">
+      {item.exhibition_address}
+    </td>
+
+    <td className="px-4 py-3 border border-gray-300">
+      {item.category}
+    </td>
+
+    <td className="px-4 py-3 border border-gray-300 flex gap-2">
+      <button
+        className="border-2 border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
+        onClick={() => navigate(`/organiser/${item._id}`)}
+      >
+        View
+      </button>
+
+      <button
+        className="flex items-center gap-1 px-3 py-1 border border-green-500 text-green-500 rounded-md hover:bg-green-100 transition"
+        onClick={() => setEditingId(item._id)}
+      >
+        Edit
+      </button>
+    </td>
+  </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-
+<ExhibitionEditPopup
+      open={Boolean(editingId)}
+      exhibitionId={editingId}
+      onClose={() => setEditingId(null)}
+    />
           {/* Pagination Controls */}
           <div className="mt-6 flex justify-center gap-4 items-center">
             <button

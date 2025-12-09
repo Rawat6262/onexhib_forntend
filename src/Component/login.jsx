@@ -8,6 +8,7 @@ const LoginForms = () => {
   const [email, setemail] = useState('');
   const [password, setpassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [login, setlogin] = useState(false);
   let navigate = useNavigate();
 
   const handleSignup = () => {
@@ -20,6 +21,7 @@ const LoginForms = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setlogin(true)
     try {
       const{ data }= await axios.post('/api/login', { email, password, rememberMe });
       console.log(data.user.role);
@@ -104,9 +106,10 @@ const LoginForms = () => {
         </div>
         <button
           type="submit"
+          disabled={login}
           className="w-full py-3 mt-6 text-lg rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:from-blue-700 hover:to-purple-700 shadow-lg transition duration-200"
         >
-          Login
+          {login ?'Logging':'Login'}
         </button>
         <button
           type="button"

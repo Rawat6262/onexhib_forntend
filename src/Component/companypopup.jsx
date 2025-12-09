@@ -135,7 +135,7 @@ const PopupForms = ({ Close, data, onCompanyAdded }) => {
       formData.append("pincode", pincode.trim());
       formData.append("company_phone_number", companyPhoneNumber.trim());
       formData.append("about_company", aboutCompany.trim());
-      formData.append("createdBy", createdBy.trim());
+      formData.append("createdBy", String(createdBy?._id || createdBy));
 
       if (brochureFile) {
         formData.append("brochure", brochureFile);
@@ -157,10 +157,12 @@ const PopupForms = ({ Close, data, onCompanyAdded }) => {
       setAboutCompany("");
       setBrochureFile(null);
       Close();
-    } catch (err) {
-      console.error(err);
-      toast.error("❌ Error adding company");
-    } finally {
+    }  catch (err) {
+  console.error(err);
+  const message = err?.response?.data?.message || "❌ Error adding company";
+  toast.error(message);
+}
+finally {
       setIsSubmitting(false);
     }
   };

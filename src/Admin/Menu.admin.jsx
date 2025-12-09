@@ -8,7 +8,7 @@ import logo2 from "../assets/Ellipse 14.png"; // profile placeholder
 export default function AdminMenu() {
   const navigate = useNavigate();
   const [data , setBigdata] = useState([])
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 const fetchDashboardData = useCallback(async () => {
     try {
       const result = await axios.get("/api/admin/signup");

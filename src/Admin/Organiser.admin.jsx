@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AdminMenu from "./Menu.admin";
 import PopupForm from "../Component/PopupForm";
 import OrganiserPopup from "../Component/OrganiserDetails"; // adjust path if needed
+import ExhibitionEditPopup from "./organiserupdate";
 
 const AdminOrganiser = () => {
   const [exhibitions, setExhibitions] = useState([]);
@@ -14,7 +15,9 @@ const AdminOrganiser = () => {
   const itemsPerPage = 5;
   const [organiserId, setOrganiserId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [update, setupdate] = useState(false);
   const navigate = useNavigate();
+  const [editingId, setEditingId] = useState(null);
 
   // Fetch exhibitions
   const fetchExhibitions = async () => {
@@ -165,58 +168,74 @@ const AdminOrganiser = () => {
           )}
 
           {/* Table */}
-          <div className="flex-1 w-full overflow-x-auto text-left mt-6">
-            {loading ? (
-              <p className="text-center py-6 text-gray-600">Loading...</p>
-            ) : (
-              <table className="w-full min-w-[700px] border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-200 text-gray-800 border-b border-gray-300">
-                    {["#", "Exhibition BY", "Exhibition Name", "Address", "Category", "Action"].map(
-                      (header) => (
-                        <th
-                          key={header}
-                          className="px-4 py-3 border-r border-gray-300 last:border-r-0"
-                        >
-                          {header}
-                        </th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="p-6 text-center text-gray-600 italic">
-                        No data found
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedData.map((item, index) => (
-                      <tr
-                        key={item._id || index}
-                        className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-4 py-3 border border-gray-300">{startIndex + index + 1}</td>
-                        <td className="px-4 py-3 border border-gray-300">{item.addedBy}</td>
-                        <td className="px-4 py-3 border border-gray-300">{item.exhibition_name}</td>
-                        <td className="px-4 py-3 border border-gray-300">{item.exhibition_address}</td>
-                        <td className="px-4 py-3 border border-gray-300">{item.category}</td>
-                        <td className="px-4 py-3 border border-gray-300">
-                          <button
-                            className="border-2 border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
-                            onClick={() => navigate(`/organiser/${item._id}`)}
-                          >
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+           <div className="flex-1 w-full overflow-x-auto text-left mt-6">
+    {loading ? (
+      <p className="text-center py-6 text-gray-600">Loading...</p>
+    ) : (
+      <table className="w-full min-w-[700px] border-collapse border border-gray-300">
+        <thead>
+          <tr className="bg-gray-200 text-gray-800 border-b border-gray-300">
+            {["#", "Exhibition BY", "Exhibition Name", "Address", "Category", "Action"].map(
+              (header) => (
+                <th key={header} className="px-4 py-3 border-r border-gray-300 last:border-r-0">
+                  {header}
+                </th>
+              )
             )}
-          </div>
+          </tr>
+        </thead>
+
+        <tbody>
+          {paginatedData.length === 0 ? (
+            <tr>
+              <td colSpan="6" className="p-6 text-center text-gray-600 italic">
+                No data found
+              </td>
+            </tr>
+          ) : (
+            paginatedData.map((item, index) => (
+              <tr key={item._id || index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <td className="px-4 py-3 border border-gray-300">{startIndex + index + 1}</td>
+                <td className="px-4 py-3 border border-gray-300">{item.addedBy}</td>
+                <td className="px-4 py-3 border border-gray-300">{item.exhibition_name}</td>
+                <td className="px-4 py-3 border border-gray-300">{item.exhibition_address}</td>
+                <td className="px-4 py-3 border border-gray-300">{item.category}</td>
+               <td className="px-4 py-3 border border-gray-300">
+  <div className="flex items-center gap-2">
+
+    {/* View */}
+    <button
+      className="flex items-center gap-1 px-3 py-1 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-100 transition"
+      onClick={() => navigate(`/organiser/${item._id}`)}
+    >
+      View
+    </button>
+
+    {/* Edit */}
+    <button
+      className="flex items-center gap-1 px-3 py-1 border border-green-500 text-green-500 rounded-md hover:bg-green-100 transition"
+      onClick={() => setEditingId(item._id)}
+    >
+      Edit
+    </button>
+
+  </div>
+</td>
+
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    )}
+
+    {/* Render popup ONCE, at the end (or top) of component */}
+    <ExhibitionEditPopup
+      open={Boolean(editingId)}
+      exhibitionId={editingId}
+      onClose={() => setEditingId(null)}
+    />
+  </div>
 
           {/* Pagination Controls */}
           <div className="mt-6 flex justify-center gap-4 items-center">

@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Menu, X, Users, User, Package } from "lucide-react"; // added icons
 import logo from "../assets/Untitled-2-01 1.png";
 import logo2 from "../assets/Ellipse 14.png";
+import ProfilePopup from "./Menupopup";
 
 export default function VerticalMenu() {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen2, setIsOpen2] = useState(false);
 
   const menuItems = [
     { label: "Organiser", path: "/api/Organiser", icon: <Users size={20} /> },
@@ -48,8 +50,10 @@ export default function VerticalMenu() {
       </nav>
 
       {/* User Info */}
-      <div className="flex items-center gap-3 px-4 py-4 bg-[#0E1B6B]">
+      <div className="flex items-center gap-3 px-4 py-4 bg-[#0E1B6B]" onClick={()=>setIsOpen2(true)} >
         <img src={logo2} alt="User Avatar" className="w-10 h-10 rounded-full" />
+       <ProfilePopup open={isOpen2} onClose={() => setIsOpen2(false)} />
+
         {isOpen && (
           <div className="text-white text-sm">
             <p className="font-bold">Tim Cook</p>
