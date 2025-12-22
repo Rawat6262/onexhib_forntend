@@ -156,11 +156,7 @@ export default function AdminProducts() {
                         >
                           View
                         </button>
-                        <button
-                          className="ml-2 px-3 py-1 border border-red-500 text-red-500 rounded-md hover:bg-red-100 transition-colors"
-                        >
-                          Edit
-                        </button>
+                       
                       </td>
                     </tr>
                   ))

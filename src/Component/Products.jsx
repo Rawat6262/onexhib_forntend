@@ -4,6 +4,7 @@ import axios from "axios";
 import VerticalMenu from "./menu";
 import ProductPopupForm from "./Product_popup";
 import { toast } from "sonner";
+import ProductEditPopup from "../Admin/productupdate";
 
 export default function CompanyDetail() {
   const { id } = useParams();
@@ -13,6 +14,8 @@ export default function CompanyDetail() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
+
   const itemsPerPage = 5;
 
   /** ✅ Fetch products with memoized function */
@@ -214,6 +217,9 @@ function SummaryCard({ label, value }) {
 }
 
 function ProductTable({ paginatedData, startIndex }) {
+    const [editOpen, setEditOpen] = useState(false);
+const [selectedProductId, setSelectedProductId] = useState(null);
+let navigate = useNavigate();
   return (
     <div className="overflow-x-auto mt-6">
       <table className="w-full min-w-[700px] border-collapse border border-gray-300">
@@ -265,17 +271,35 @@ function ProductTable({ paginatedData, startIndex }) {
 
   <td className="px-4 py-3 border border-gray-300 flex justify-center gap-4">
     <button
-      onClick={() => navigate(`/product/${item._id}`)}
+      onClick={() => navigate(`/product/detail/${item._id}`)}
       className="border border-blue-500 text-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition-colors"
     >
       View
     </button>
 
     <button
-      onClick={() => setEditingId(item._id)}
+       onClick={() => {
+    setSelectedProductId(item._id);
+    setEditOpen(true);
+  }}
       className="flex items-center gap-1 px-3 py-1 border border-green-500 text-green-500 rounded-md hover:bg-green-100 transition"
     >
       Edit
+    </button>
+    <ProductEditPopup
+  open={editOpen}
+  // companyId={null}   // ❌ remove
+  productId={selectedProductId}
+  onClose={() => {
+    setEditOpen(false);
+    setSelectedProductId(null);
+  }}
+/>
+    <button
+      onClick={() => setEditingId(item._id)}
+      className="flex items-center gap-1 px-3 py-1 border border-red-500 text-red-500 rounded-md hover:bg-red-100 transition"
+    >
+      Delete
     </button>
   </td>
 </tr>

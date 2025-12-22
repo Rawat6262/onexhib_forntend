@@ -14,6 +14,7 @@ import User from "./Component/User";
 import CompanyDetail from "./Component/Products";
 import AdminDashboard from "./Admin/Dashboard.admin";
 import axios from "axios";
+import ProductDisplay from "./Component/productdetal";
 
 let role = 'NORMAL';
 
@@ -39,7 +40,9 @@ export default function App() {
           <Route path="/organiser/:id" element={<User/>} />
           <Route path="/api/Admin/Company" element={<AdminCompany />} />
           <Route path="/api/Admin/Products" element={<AdminProducts />} />
+          <Route path="/api/Admin/Products" element={<AdminProducts />} />
             <Route path="/company/:id" element={<CompanyDetail />} />
+            <Route path="/product/detail/:id" element={<ProductDisplay />} />
         </Routes>
       <Toaster position="top-center" richColors  />
     </>

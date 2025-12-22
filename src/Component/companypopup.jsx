@@ -1,45 +1,41 @@
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 
-// --- Custom "Bold & Visible" Label ---
-const Label = ({ children, required, htmlFor }) => (
-  <label htmlFor={htmlFor} className="block text-sm font-bold text-gray-900 mb-1.5 tracking-wide">
-    {children} {required && <span className="text-red-600 text-lg align-middle ml-1">*</span>}
+/* -------------------- UI HELPERS -------------------- */
+
+const Label = ({ children, required }) => (
+  <label className="block text-sm font-bold text-gray-900 mb-1">
+    {children}
+    {required && <span className="text-red-600 ml-1">*</span>}
   </label>
 );
 
-// --- Reusable Input Component ---
-const InputField = ({ id, label, value, onChange, placeholder, type = "text", required, maxLength, onBlur }) => (
-  <div className="w-full">
-    <Label required={required} htmlFor={id}>{label}</Label>
+const InputField = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+  maxLength,
+  placeholder,
+}) => (
+  <div>
+    <Label required={required}>{label}</Label>
     <input
-      id={id}
-      name={id}
       type={type}
       value={value}
       onChange={onChange}
-      onBlur={onBlur}
-      placeholder={placeholder}
       maxLength={maxLength}
       required={required}
-      className="w-full rounded-md border border-gray-300 bg-white px-4 py-2.5 text-gray-900 font-medium focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition shadow-sm placeholder-gray-400"
+      placeholder={placeholder}
+      className="w-full rounded-md border border-gray-300 px-4 py-2.5 focus:ring-1 focus:ring-indigo-600 outline-none"
     />
   </div>
 );
 
-InputField.propTypes = {
-  id: PropTypes.string,
-  label: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onChange: PropTypes.func,
-  placeholder: PropTypes.string,
-  type: PropTypes.string,
-  required: PropTypes.bool,
-  maxLength: PropTypes.number,
-  onBlur: PropTypes.func,
-};
+/* -------------------- CONSTANTS -------------------- */
 
 const ALLOWED_BROCHURE_TYPES = [
   "application/pdf",
@@ -48,284 +44,205 @@ const ALLOWED_BROCHURE_TYPES = [
   "image/jpeg",
   "image/png",
 ];
-const MAX_BROCHURE_SIZE = 5 * 1024 * 1024; // 5MB
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png"];
+const MAX_BROCHURE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const websiteRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}/i;
+
+/* -------------------- MAIN COMPONENT -------------------- */
 
 const PopupForms = ({ Close, data, onCompanyAdded }) => {
-  // --- State ---
-  const [companyName, setCompanyName] = useState("");
-  const [companyAddress, setCompanyAddress] = useState("");
-  const [companyNature, setCompanyNature] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [pincode, setPincode] = useState("");
-  const [companyPhoneNumber, setCompanyPhoneNumber] = useState("");
-  const [aboutCompany, setAboutCompany] = useState("");
-  const [brochureFile, setBrochureFile] = useState(null);
-  const [createdBy, setBy] = useState(null);
+  const [form, setForm] = useState({
+    company_name: "",
+    company_email: "",
+    company_nature: "",
+    company_phone_number: "",
+    company_address: "",
+    pincode: "",
+    about_company: "",
+    company_website: "",
+    stall_no: "",
+    hall_no: "",
+  });
+
+  const [brochure, setBrochure] = useState(null); // 👉 company_url
+  const [companyImage, setCompanyImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [createdBy, setCreatedBy] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (data) setBy(data);
+    if (data) setCreatedBy(data?._id || data);
   }, [data]);
 
-  // --- Basic client-side validation function ---
-  const validate = () => {
-    if (!companyName.trim()) return "Company name is required.";
-    if (!companyNature.trim()) return "Nature of business is required.";
-    if (!companyEmail.trim()) return "Email is required.";
-    if (!emailRegex.test(companyEmail.trim())) return "Enter a valid email address.";
-    if (!companyPhoneNumber.trim()) return "Phone number is required.";
-    if (companyPhoneNumber.trim().length !== 10) return "Phone number must be 10 digits.";
-    if (!companyAddress.trim()) return "Company address is required.";
-    if (!pincode.trim()) return "Pincode is required.";
-    if (pincode.trim().length !== 6) return "Pincode must be 6 digits.";
-    if (!aboutCompany.trim()) return "About company is required.";
+  const updateField = (key) => (e) =>
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-    if (brochureFile) {
-      if (!ALLOWED_BROCHURE_TYPES.includes(brochureFile.type)) return "Unsupported brochure file type.";
-      if (brochureFile.size > MAX_BROCHURE_SIZE) return "Brochure file size must be <= 5MB.";
-    }
-
-    return null; // no error
-  };
+  /* -------------------- FILE HANDLERS -------------------- */
 
   const handleBrochureChange = (e) => {
-    const file = e.target.files?.[0] ?? null;
-    if (!file) {
-      setBrochureFile(null);
-      return;
-    }
-    if (!ALLOWED_BROCHURE_TYPES.includes(file.type)) {
-      toast.error("Unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG.");
-      setBrochureFile(null);
-      return;
-    }
-    if (file.size > MAX_BROCHURE_SIZE) {
-      toast.error("File too large. Max 5MB allowed.");
-      setBrochureFile(null);
-      return;
-    }
-    setBrochureFile(file);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_BROCHURE_TYPES.includes(file.type))
+      return toast.error("Unsupported brochure file type");
+
+    if (file.size > MAX_BROCHURE_SIZE)
+      return toast.error("Brochure size must be under 5MB");
+
+    setBrochure(file);
   };
 
-  // --- Submit Logic ---
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type))
+      return toast.error("Only JPG or PNG allowed");
+
+    if (file.size > MAX_IMAGE_SIZE)
+      return toast.error("Image size must be under 3MB");
+
+    setCompanyImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  /* -------------------- VALIDATION -------------------- */
+
+  const validate = () => {
+    if (!form.company_name.trim()) return "Company name is required";
+    if (!emailRegex.test(form.company_email)) return "Invalid email";
+    if (!form.company_nature.trim()) return "Nature of business is required";
+    if (form.company_phone_number.length !== 10)
+      return "Phone number must be 10 digits";
+    if (form.pincode.length !== 6) return "Pincode must be 6 digits";
+    if (!form.company_address.trim()) return "Address is required";
+    if (!form.about_company.trim()) return "About company is required";
+    if (!websiteRegex.test(form.company_website))
+      return "Enter a valid website URL";
+    if (!form.stall_no.trim()) return "Stall number is required";
+    if (!form.hall_no.trim()) return "Hall number is required";
+    if (!createdBy) return "CreatedBy missing";
+    return null;
+  };
+
+  /* -------------------- SUBMIT -------------------- */
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    // First allow browser to run native constraint validation
-    const formEl = document.getElementById("companyForm");
-    if (formEl && !formEl.checkValidity()) {
-      formEl.reportValidity();
-      return;
-    }
-
-    const customError = validate();
-    if (customError) {
-      toast.error(customError);
-      return;
-    }
+    const error = validate();
+    if (error) return toast.error(error);
 
     setIsSubmitting(true);
+
     try {
       const formData = new FormData();
-      formData.append("company_name", companyName.trim());
-      formData.append("company_address", companyAddress);
-      formData.append("company_nature", companyNature.trim());
-      formData.append("company_email", companyEmail.trim());
-      formData.append("pincode", pincode.trim());
-      formData.append("company_phone_number", companyPhoneNumber.trim());
-      formData.append("about_company", aboutCompany.trim());
-      formData.append("createdBy", String(createdBy?._id || createdBy));
 
-      if (brochureFile) {
-        formData.append("brochure", brochureFile);
-      }
+      Object.entries(form).forEach(([key, value]) =>
+        formData.append(key, value.trim())
+      );
+
+      formData.append("createdBy", createdBy);
+
+      if (brochure) formData.append("brochure", brochure); // ✅ FIX
+      if (companyImage)
+        formData.append("company_image_url", companyImage);
 
       await axios.post("/api/company", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      toast.success("✅ Company added successfully!");
-      if (onCompanyAdded) onCompanyAdded();
-      // reset form (simple reset)
-      setCompanyName("");
-      setCompanyAddress("");
-      setCompanyNature("");
-      setCompanyEmail("");
-      setPincode("");
-      setCompanyPhoneNumber("");
-      setAboutCompany("");
-      setBrochureFile(null);
+      toast.success("✅ Company added successfully");
+      onCompanyAdded?.();
       Close();
-    }  catch (err) {
-  console.error(err);
-  const message = err?.response?.data?.message || "❌ Error adding company";
-  toast.error(message);
-}
-finally {
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to add company");
+    } finally {
       setIsSubmitting(false);
     }
   };
 
+  /* -------------------- UI -------------------- */
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      {/* Main Card: Fixed Height & Width Constraints */}
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+      <div className="bg-white w-[90%] h-[90%] max-w-6xl rounded-xl flex flex-col overflow-hidden">
 
-        {/* Header */}
-        <div className="flex justify-between items-center bg-gray-50 px-8 py-5 border-b border-gray-200 shrink-0">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Add New Company</h2>
-            <p className="text-sm text-gray-500 font-semibold mt-1">Organization Details</p>
+        <div className="px-8 py-5 border-b flex justify-between shrink-0">
+          <h2 className="text-xl font-bold">Add New Company</h2>
+          <button onClick={Close} className="text-3xl">&times;</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField label="Company Name" required value={form.company_name} onChange={updateField("company_name")} />
+            <InputField label="Nature of Business" required value={form.company_nature} onChange={updateField("company_nature")} />
+            <InputField label="Email" required type="email" value={form.company_email} onChange={updateField("company_email")} />
+            <InputField label="Phone Number" required maxLength={10}
+              value={form.company_phone_number}
+              onChange={(e) =>
+                updateField("company_phone_number")({
+                  target: { value: e.target.value.replace(/\D/g, "") },
+                })
+              }
+            />
+            <InputField label="Address" required value={form.company_address} onChange={updateField("company_address")} />
+            <InputField label="Pincode" required maxLength={6}
+              value={form.pincode}
+              onChange={(e) =>
+                updateField("pincode")({
+                  target: { value: e.target.value.replace(/\D/g, "") },
+                })
+              }
+            />
+            <InputField label="Company Website" required value={form.company_website} onChange={updateField("company_website")} />
+            <InputField label="Stall No" required value={form.stall_no} onChange={updateField("stall_no")} />
+            <InputField label="Hall No" required value={form.hall_no} onChange={updateField("hall_no")} />
           </div>
-          <button
-            onClick={Close}
-            className="text-gray-400 hover:text-red-600 text-4xl leading-none transition-colors"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
 
-        {/* Scrollable Form Body */}
-        <div className="overflow-y-auto bg-white">
-          <form id="companyForm" onSubmit={handleSubmit} className="p-8" noValidate>
+          <div>
+            <Label required>About Company</Label>
+            <textarea
+              className="w-full h-32 border rounded-md p-3"
+              value={form.about_company}
+              onChange={updateField("about_company")}
+              required
+            />
+          </div>
 
-            <div className="flex flex-col lg:flex-row gap-10">
-
-              {/* --- LEFT COLUMN (70%): Input Fields --- */}
-              <div className="flex-1 space-y-6">
-
-                {/* Row 1: Name & Nature */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    id="companyName"
-                    label="Company Name"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="e.g. Acme Industries"
-                    required
-                  />
-                  <InputField
-                    id="companyNature"
-                    label="Nature of Business"
-                    value={companyNature}
-                    onChange={(e) => setCompanyNature(e.target.value)}
-                    placeholder="e.g. Manufacturing, IT"
-                    required
-                  />
-                </div>
-
-                {/* Row 2: Contact Info */}
-                <div className="bg-gray-50 p-5 rounded-lg border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    id="companyEmail"
-                    type="email"
-                    label="Email Address"
-                    value={companyEmail}
-                    onChange={(e) => setCompanyEmail(e.target.value)}
-                    placeholder="contact@company.com"
-                    required
-                  />
-                  <InputField
-                    id="companyPhoneNumber"
-                    label="Phone Number"
-                    value={companyPhoneNumber}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      if (val.length <= 10) setCompanyPhoneNumber(val);
-                    }}
-                    placeholder="9876543210"
-                    maxLength={10}
-                    required
-                  />
-                </div>
-
-                {/* Row 3: Address (Full Width) & Pincode */}
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-[3]">
-                    <InputField
-                      id="companyAddress"
-                      label="Company Address"
-                      value={companyAddress}
-                      onChange={(e) => setCompanyAddress(e.target.value)}
-                      placeholder="Street address, City, State"
-                      required
-                    />
-                  </div>
-                  <div className="flex-[1]">
-                    <InputField
-                      id="pincode"
-                      label="Pincode"
-                      value={pincode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        if (val.length <= 6) setPincode(val);
-                      }}
-                      placeholder="000000"
-                      maxLength={6}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* --- RIGHT COLUMN (30%): Large Text Area & File --- */}
-              <div className="lg:w-[320px] flex flex-col gap-6 shrink-0">
-
-                {/* About Section - Takes remaining height visually */}
-                <div className="flex-1 flex flex-col">
-                  <Label required htmlFor="aboutCompany">About Company</Label>
-                  <textarea
-                    id="aboutCompany"
-                    name="aboutCompany"
-                    value={aboutCompany}
-                    onChange={(e) => setAboutCompany(e.target.value)}
-                    placeholder="Write a brief description about the company..."
-                    className="w-full flex-1 min-h-[160px] rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 font-medium focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition shadow-sm resize-none placeholder-gray-400"
-                    required
-                  />
-                </div>
-
-                {/* File Upload - Clean Box Style */}
-                <div className="bg-indigo-50 rounded-lg p-5 border border-indigo-100">
-                  <Label htmlFor="brochure">Company Brochure</Label>
-                  <input
-                    id="brochure"
-                    name="brochure"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    onChange={handleBrochureChange}
-                    className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-bold file:bg-white file:text-indigo-700 hover:file:bg-indigo-50 cursor-pointer mt-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Supported: PDF, DOC, DOCX, JPG, PNG — max 5MB</p>
-                </div>
-
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label>Company Brochure (PDF / DOC)</Label>
+              <input type="file" onChange={handleBrochureChange} />
             </div>
 
-            {/* Footer (moved inside form so native validation runs) */}
-            <div className="p-5 border-t border-gray-200 bg-gray-50 flex justify-end gap-4 mt-6">
-              <button
-                type="button"
-                onClick={Close}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition shadow-sm disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-2.5 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition shadow-md disabled:opacity-70 flex items-center gap-2"
-              >
-                {isSubmitting ? "Saving..." : "Save Company"}
-              </button>
+            <div>
+              <Label>Company Image</Label>
+              {preview && (
+                <img src={preview} alt="preview" className="h-32 rounded mb-2 object-cover" />
+              )}
+              <input type="file" onChange={handleImageChange} />
             </div>
+          </div>
 
-          </form>
-        </div>
-
+          <div className="flex justify-end gap-4 pt-6 border-t">
+            <button type="button" onClick={Close} className="px-6 py-2 border rounded-md">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-8 py-2 rounded-md bg-indigo-600 text-white font-semibold"
+            >
+              {isSubmitting ? "Saving..." : "Save Company"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

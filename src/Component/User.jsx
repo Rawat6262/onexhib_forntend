@@ -61,17 +61,23 @@ function User() {
 
   // ✅ Filter + paginate
   const filteredCompanies = useMemo(() => {
-    return companies.filter((c, index) => {
-      const query = search.toLowerCase();
-      const rowNumber = (index + 1).toString();
-      return (
-        rowNumber.includes(query) ||
-        (c.company_name || "").toLowerCase().includes(query) ||
-        (c.company_email || "").toLowerCase().includes(query) ||
-        (c.company_phone_number || "").toLowerCase().includes(query)
-      );
-    });
-  }, [companies, search]);
+  const query = (search || "").trim().toLowerCase();
+
+  // If search is empty, return all companies
+  if (!query) return companies;
+
+  return companies.filter((c, index) => {
+    const rowNumber = String(index + 1);
+
+    return (
+      rowNumber.includes(query) ||
+      String(c?.company_name || "").toLowerCase().includes(query) ||
+      String(c?.company_email || "").toLowerCase().includes(query) ||
+      String(c?.company_phone_number || "").toLowerCase().includes(query)
+    );
+  });
+}, [companies, search]);
+
 
   useEffect(() => {
     fetchExhibitionData();

@@ -128,14 +128,14 @@ const AdminDashboard = () => {
               ) : (
                 paginatedData.map((item, index) => (
                   <tr key={item._id || index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    <td className="px-4 py-3 border border-gray-300">{startIndex + index + 1}</td>
-                    <td className="px-4 py-3 border border-gray-300">
+                    <td className="px-4 py-3 border border-gray-300 text-center">{startIndex + index + 1}</td>
+                    <td className="px-4 py-3 border border-gray-300 text-center">
                       {`${item.first_name || ""} ${item.last_name || ""}`.trim()}
                     </td>
-                    <td className="px-4 py-3 border border-gray-300">{item.email}</td>
-                    <td className="px-4 py-3 border border-gray-300">{item.mobile_number}</td>
-                    <td className="px-4 py-3 border border-gray-300">{item.company_name}</td>
-                    <td className="px-4 py-3 border border-gray-300">{item.designation}</td>
+                    <td className="px-4 py-3 border border-gray-300 text-center">{item.email}</td>
+                    <td className="px-4 py-3 border border-gray-300 text-center">{item.mobile_number}</td>
+                    <td className="px-4 py-3 border border-gray-300 text-center">{item.company_name}</td>
+                    <td className="px-4 py-3 border border-gray-300 text-center">{item.designation}</td>
                   </tr>
                 ))
               )}
