@@ -3,7 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import VerticalMenu from "./menu";
 import PopupForm from "./PopupForm";
-import ExhibitionPopup from "./Exhibitionpop";
 import OrganiserPopup from "./OrganiserDetails";
 import ExhibitionEditPopup from "../Admin/organiserupdate";
 
