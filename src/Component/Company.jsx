@@ -6,7 +6,7 @@ import React, {
 } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import VerticalMenu from "./menu";
+import VerticalMenu from "./Menu";
 import ProductPopupForm from "./Product_popup";
 
 export default function CompanyDetail() {
