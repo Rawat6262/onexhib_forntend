@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import VerticalMenu from "./menu";
+import VerticalMenu from "./Menu";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 // import PopupForms from "./ExhibitionDetail";

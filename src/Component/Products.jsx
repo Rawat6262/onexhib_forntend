@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import VerticalMenu from "./menu";
+import VerticalMenu from "./Menu";
 import ProductPopupForm from "./Product_popup";
 import { toast } from "sonner";
 import ProductEditPopup from "../Admin/productupdate";

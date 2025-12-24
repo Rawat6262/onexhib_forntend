@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import VerticalMenu from "./menu";
+import VerticalMenu from "./Menu";
 import { useParams, useNavigate } from "react-router-dom";
 
 function ProductDisplay() {
