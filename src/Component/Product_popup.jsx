@@ -53,7 +53,7 @@ const ProductPopupForm = ({ Close, data, exid, refreshProducts }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!productName || !price || !category || !details) {
+    if (!productName  || !category || !details) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -144,7 +144,7 @@ const ProductPopupForm = ({ Close, data, exid, refreshProducts }) => {
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="0.00"
                       className={inputClass}
-                      required
+                      
                     />
                   </div>
                 </div>

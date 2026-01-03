@@ -28,7 +28,13 @@ function UserForm() {
 
   const navigate = useNavigate();
 
-  // Country / State / City lists
+  /* ------------------ DROPDOWN OPTIONS ------------------ */
+  const designationOptions = [
+    { value: 'organiser', label: 'Organiser' },
+    { value: 'exhibition_service', label: 'Exhibition Service' },
+  ];
+
+  /* ------------------ COUNTRY / STATE / CITY ------------------ */
   const countries = useMemo(
     () =>
       Country.getAllCountries().map((c) => ({
@@ -60,10 +66,9 @@ function UserForm() {
     [form.country, form.state]
   );
 
-  // helper: mark touched
-  const markTouched = (field) => setTouched((p) => ({ ...p, [field]: true }));
+  const markTouched = (field) =>
+    setTouched((prev) => ({ ...prev, [field]: true }));
 
-  // Handle dropdowns
   const handleSelect = (option, field) => {
     setForm((prev) => ({
       ...prev,
@@ -71,306 +76,155 @@ function UserForm() {
       ...(field === 'country' ? { state: '', city: '' } : {}),
       ...(field === 'state' ? { city: '' } : {}),
     }));
-    // mark touched for select fields
     markTouched(field);
-    if (field === 'country') markTouched('state');
-    if (field === 'state') markTouched('city');
   };
 
-  // Handle inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === 'mobile_number') {
-      // Allow only 10 digits
       const digits = value.replace(/\D/g, '').slice(0, 10);
-
-      setForm((prev) => ({
-        ...prev,
-        [name]: digits,
-      }));
-
-      // Auto move focus if 10 digits entered
-      if (digits.length === 10) {
-        const formEl = e.target.form;
-        if (formEl) {
-          const elements = Array.from(formEl.elements).filter(
-            (el) => el.tagName.toLowerCase() !== 'fieldset' && !el.disabled
-          );
-          const index = elements.indexOf(e.target);
-          const next = elements[index + 1];
-          if (next) next.focus();
-        }
-      }
+      setForm((prev) => ({ ...prev, mobile_number: digits }));
     } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // ---------------- Validation helpers ----------------
+  /* ------------------ VALIDATION ------------------ */
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
-  // Simple URL validator that accepts http/https and common URL characters
-  const URL_RE = /^(https?:\/\/)[^\s$.?#].[^\s]*$/i;
-  // Password: min 8 chars, at least one letter and one number
-  const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&^_-]{8,}$/;
+  const PASSWORD_RE =
+    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&^_-]{8,}$/;
 
   const validateAll = (values) => {
     const e = {};
 
-    // Required personal fields
-    if (!values.first_name?.trim()) e.first_name = 'First name is required.';
-    if (!values.last_name?.trim()) e.last_name = 'Last name is required.';
-    if (!values.email?.trim()) e.email = 'Email is required.';
-    else if (!EMAIL_RE.test(values.email.trim())) e.email = 'Enter a valid email address.';
+    if (!values.first_name.trim())
+      e.first_name = 'First name is required.';
+    if (!values.last_name.trim())
+      e.last_name = 'Last name is required.';
 
-    if (!values.password) e.password = 'Password is required.';
+    if (!values.email.trim())
+      e.email = 'Email is required.';
+    else if (!EMAIL_RE.test(values.email))
+      e.email = 'Invalid email address.';
+
+    if (!values.password)
+      e.password = 'Password is required.';
     else if (!PASSWORD_RE.test(values.password))
       e.password =
-        'Password must be at least 8 characters and include at least one letter and one number.';
+        'Password must be 8+ characters with letters and numbers.';
 
-    // Company
-    if (!values.company_name?.trim()) e.company_name = 'Company name is required.';
+    // company_name ❌ NOT REQUIRED
+    // website ❌ NOT REQUIRED
 
-    // Mobile
-    if (!values.mobile_number?.trim()) e.mobile_number = 'Mobile number is required.';
-    else if (values.mobile_number.trim().length !== 10)
+    if (!values.mobile_number)
+      e.mobile_number = 'Mobile number is required.';
+    else if (values.mobile_number.length !== 10)
       e.mobile_number = 'Mobile number must be 10 digits.';
 
-    // Location
     if (!values.country) e.country = 'Country is required.';
     if (!values.state) e.state = 'State is required.';
     if (!values.city) e.city = 'City is required.';
-    if (!values.address?.trim()) e.address = 'Address is required.';
-
-    // Website (optional but if present must be valid)
-    if (values.website?.trim() && !URL_RE.test(values.website.trim()))
-      e.website = 'Enter a valid website URL (include http/https).';
+    if (!values.address.trim())
+      e.address = 'Address is required.';
 
     return e;
   };
 
-  // Submit
+  /* ------------------ SUBMIT ------------------ */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Allow browser native constraint validation first
-    const formEl = document.getElementById('user-signup-form');
-    if (formEl && !formEl.checkValidity()) {
-      formEl.reportValidity();
-      return;
-    }
-
-    // Custom validation
     const validationErrors = validateAll(form);
     setErrors(validationErrors);
-    // mark all touched so inline errors show
     setTouched({
       first_name: true,
       last_name: true,
       email: true,
       password: true,
-      company_name: true,
       mobile_number: true,
       country: true,
       state: true,
       city: true,
       address: true,
-      website: true,
     });
 
-    if (Object.keys(validationErrors).length > 0) {
-      toast.error('Please fix the highlighted errors before submitting.');
+    if (Object.keys(validationErrors).length) {
+      toast.error('Fix the errors before submitting');
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const { data } = await axios.post('/api/signup', form);
-      toast.success(typeof data === 'string' ? data : 'User created successfully!');
+      setIsSubmitting(true);
+      await axios.post('/api/signup', form);
+      toast.success('User created successfully');
       navigate('/api/organiser');
-    } catch (error) {
-      console.error(error);
-      // Show a friendly message; include server message if present.
-      const msg = error?.response?.data?.message || error?.message || 'Submission failed.';
-      toast.error(`Submission failed! ${msg}`);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || 'Submission failed'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  /* ------------------ UI ------------------ */
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
       <form
-        id="user-signup-form"
         onSubmit={handleSubmit}
-        className="w-full max-w-4xl p-8 rounded-3xl bg-white shadow-2xl border border-gray-100 space-y-8 transition-all hover:shadow-[0_8px_48px_rgba(60,60,120,0.15)]"
-        noValidate
+        className="w-full max-w-4xl p-8 rounded-3xl bg-white shadow-2xl border space-y-8"
       >
-        <div className="flex justify-center mb-6">
-          <img src={logo} alt="Logo" className="w-40" />
+        <div className="flex justify-center">
+          <img src={logo} className="w-40" alt="logo" />
         </div>
 
-        {/* Personal Info */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Personal Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField
-              id="first_name"
-              label="First Name"
-              name="first_name"
-              value={form.first_name}
-              onChange={handleChange}
-              required
-              onBlur={() => markTouched('first_name')}
-              error={touched.first_name ? errors.first_name : null}
-            />
-            <InputField
-              id="last_name"
-              label="Last Name"
-              name="last_name"
-              value={form.last_name}
-              onChange={handleChange}
-              required
-              onBlur={() => markTouched('last_name')}
-              error={touched.last_name ? errors.last_name : null}
-            />
-            <InputField
-              id="email"
-              type="email"
-              label="Email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              onBlur={() => markTouched('email')}
-              error={touched.email ? errors.email : null}
-            />
-            <InputField
-              id="password"
-              type="password"
-              label="Password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              onBlur={() => markTouched('password')}
-              error={touched.password ? errors.password : null}
-            />
-          </div>
+        {/* PERSONAL */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <InputField label="First Name" name="first_name" value={form.first_name} onChange={handleChange} error={errors.first_name} />
+          <InputField label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} error={errors.last_name} />
+          <InputField label="Email" type="email" name="email" value={form.email} onChange={handleChange} error={errors.email} />
+          <InputField label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={errors.password} />
         </div>
 
-        {/* Company Info */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Company Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField
-              id="company_name"
-              label="Company Name"
-              name="company_name"
-              value={form.company_name}
-              onChange={handleChange}
-              required
-              onBlur={() => markTouched('company_name')}
-              error={touched.company_name ? errors.company_name : null}
-            />
-            <InputField
-              id="designation"
-              label="Designation"
-              name="designation"
-              value={form.designation}
-              onChange={handleChange}
-            />
-            <InputField
-              id="website"
-              type="url"
-              label="Website"
-              name="website"
-              value={form.website}
-              onChange={handleChange}
-              placeholder="https://example.com"
-              onBlur={() => markTouched('website')}
-              error={touched.website ? errors.website : null}
-            />
-            <InputField
-              id="mobile_number"
-              label="Mobile Number"
-              name="mobile_number"
-              value={form.mobile_number}
-              onChange={handleChange}
-              required
-              onBlur={() => markTouched('mobile_number')}
-              error={touched.mobile_number ? errors.mobile_number : null}
-            />
-          </div>
+        {/* COMPANY */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <InputField label="Company Name (Optional)" name="company_name" value={form.company_name} onChange={handleChange} />
+
+          <SelectField
+            label="Designation"
+            options={designationOptions}
+            value={form.designation}
+            onChange={(val) =>
+              setForm((p) => ({
+                ...p,
+                designation: val ? val.value : '',
+              }))
+            }
+          />
+
+          <InputField label="Website (Optional)" name="website" value={form.website} onChange={handleChange} />
+          <InputField label="Mobile Number" name="mobile_number" value={form.mobile_number} onChange={handleChange} error={errors.mobile_number} />
         </div>
 
-        {/* Location Info */}
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Location</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <SelectField
-              id="country"
-              label="Country"
-              options={countries}
-              value={form.country}
-              onChange={(val) => handleSelect(val, 'country')}
-              isDisabled={false}
-              onBlur={() => markTouched('country')}
-              error={touched.country ? errors.country : null}
-            />
-            <SelectField
-              id="state"
-              label="State"
-              options={states}
-              value={form.state}
-              onChange={(val) => handleSelect(val, 'state')}
-              isDisabled={!form.country}
-              onBlur={() => markTouched('state')}
-              error={touched.state ? errors.state : null}
-            />
-            <SelectField
-              id="city"
-              label="City"
-              options={cities}
-              value={form.city}
-              onChange={(val) => handleSelect(val, 'city')}
-              isDisabled={!form.state}
-              onBlur={() => markTouched('city')}
-              error={touched.city ? errors.city : null}
-            />
-          </div>
-          <div className="mt-6">
-            <label className="block mb-2 text-sm font-semibold text-gray-700">Address</label>
-            <textarea
-              id="address"
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              onBlur={() => markTouched('address')}
-              rows={4}
-              placeholder="Enter your address"
-              required
-              aria-invalid={!!(touched.address && errors.address)}
-              aria-describedby={touched.address && errors.address ? 'address-error' : undefined}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                touched.address && errors.address ? 'border-red-500' : 'border-gray-300'
-              } bg-gray-50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition resize-none`}
-            />
-            {touched.address && errors.address && (
-              <p id="address-error" className="text-xs text-red-600 mt-1">
-                {errors.address}
-              </p>
-            )}
-          </div>
+        {/* LOCATION */}
+        <div className="grid md:grid-cols-3 gap-6">
+          <SelectField label="Country" options={countries} value={form.country} onChange={(v) => handleSelect(v, 'country')} />
+          <SelectField label="State" options={states} value={form.state} onChange={(v) => handleSelect(v, 'state')} />
+          <SelectField label="City" options={cities} value={form.city} onChange={(v) => handleSelect(v, 'city')} />
         </div>
+
+        <textarea
+          className="w-full border rounded-lg p-3"
+          placeholder="Address"
+          name="address"
+          value={form.address}
+          onChange={handleChange}
+        />
 
         <button
-          type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 mt-6 text-lg rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-700 hover:to-purple-700 shadow-lg transition duration-200"
+          className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold"
         >
           {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
@@ -379,53 +233,25 @@ function UserForm() {
   );
 }
 
-// Reusable Input
-const InputField = ({ id, label, name, value, onChange, type = 'text', required, placeholder, onBlur, error }) => (
+/* ------------------ REUSABLE COMPONENTS ------------------ */
+
+const InputField = ({ label, error, ...props }) => (
   <div>
-    <label htmlFor={id} className="block mb-2 text-sm font-semibold text-gray-700">
-      {label}
-      {required && <span className="text-red-600 ml-1">*</span>}
-    </label>
-    <input
-      id={id}
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      placeholder={placeholder || label}
-      required={required}
-      aria-invalid={!!error}
-      aria-describedby={error ? `${id}-error` : undefined}
-      maxLength={name === 'mobile_number' ? 10 : undefined}
-      className={`w-full px-4 py-2 rounded-lg border ${
-        error ? 'border-red-500' : 'border-gray-300'
-      } bg-gray-50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition`}
-    />
-    {error && (
-      <p id={`${id}-error`} className="text-xs text-red-600 mt-1">
-        {error}
-      </p>
-    )}
+    <label className="block mb-1 font-semibold">{label}</label>
+    <input {...props} className="w-full border rounded-lg px-3 py-2" />
+    {error && <p className="text-red-500 text-xs">{error}</p>}
   </div>
 );
 
-// Reusable Select
-const SelectField = ({ id, label, options, value, onChange, isDisabled, onBlur, error }) => (
+const SelectField = ({ label, options, value, onChange }) => (
   <div>
-    <label className="block mb-2 text-sm font-semibold text-gray-700">{label}</label>
+    <label className="block mb-1 font-semibold">{label}</label>
     <Select
-      inputId={id}
       options={options}
-      value={options.find((opt) => opt.value === value) || null}
+      value={options.find((o) => o.value === value) || null}
       onChange={onChange}
-      placeholder={`Select ${label.toLowerCase()}`}
-      isDisabled={isDisabled}
       isClearable
-      classNamePrefix="react-select"
-      onBlur={onBlur}
     />
-    {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
   </div>
 );
 

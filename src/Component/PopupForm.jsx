@@ -21,7 +21,6 @@ const InputField = ({ id, label, value, onChange, placeholder, type = "text", re
       onChange={onChange}
       onBlur={onBlur}
       placeholder={placeholder}
-      required={required}
       aria-invalid={!!error}
       aria-describedby={error ? `${id}-error` : undefined}
       className={`w-full rounded-md border px-3 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition shadow-sm placeholder-gray-400 ${
@@ -43,7 +42,6 @@ const TextAreaField = ({ id, label, value, onChange, placeholder, rows = 3, requ
       onBlur={onBlur}
       placeholder={placeholder}
       rows={rows}
-      required={required}
       aria-invalid={!!error}
       aria-describedby={error ? `${id}-error` : undefined}
       className={`w-full rounded-md border px-3 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition shadow-sm resize-none placeholder-gray-400 ${
@@ -90,6 +88,8 @@ const PopupForm = ({ onClose }) => {
   const [venue, setVenue] = useState("");
   const [exhibition_address, setAddress] = useState("");
   const [email, setEmail] = useState("");
+  const [Exhibitor_Profile, setexhibitor] = useState("");
+  const [vistor_Profile, setvistor] = useState("");
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -193,6 +193,8 @@ const PopupForm = ({ onClose }) => {
 
     // file errors previously set in handlers; also ensure not oversized/invalid
     // merge any existing file errors
+    if(!exhibition_image) e.exhibition_image='Exhibition_image is Required';
+    if(!layout) e.layout ='layout is Required';
     if (errors.exhibition_image) e.exhibition_image = errors.exhibition_image;
     if (errors.layout) e.layout = errors.layout;
 
@@ -224,8 +226,11 @@ const PopupForm = ({ onClose }) => {
       startDate: true,
       endDate: true,
       about_exhibition: true,
-      privacy_policy: true,
-      terms_of_service: true,
+      // privacy_policy: true,
+      // terms_of_service: true,
+      exhibition_image:true,
+      layout:true
+    
     });
 
     if (Object.keys(validationErrors).length) {
@@ -248,6 +253,8 @@ const PopupForm = ({ onClose }) => {
       formData.append("session", session.trim());
       formData.append("sponsor", sponsor.trim());
       formData.append("partners", partners.trim());
+      formData.append("exhibitor_profile", Exhibitor_Profile.trim());
+      formData.append("vistor", vistor_Profile.trim());
       formData.append("Support", Support.trim());
       formData.append("privacy_policy", privacy_policy.trim());
       formData.append("terms_of_service", terms_of_service.trim());
@@ -488,6 +495,29 @@ const PopupForm = ({ onClose }) => {
                     onBlur={() => markTouched("terms_of_service")}
                     error={touched.terms_of_service ? errors.terms_of_service : null}
                   />
+                </div>
+              </div>
+              <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
+                <h3 className="text-blue-700 font-bold uppercase text-xs tracking-wider mb-2">Exhibitor & vistor</h3>
+                <TextAreaField
+                  id="Exhibitor_Profile"
+                  label="Exhibitor_Profile"
+                  value={Exhibitor_Profile}
+                  onChange={(e) => setexhibitor(e.target.value)}
+                  placeholder="Exhibitor_Profile"
+                />
+
+                <div className="grid grid-cols-1 gap-4">
+                  <TextAreaField
+                    id="Vistor"
+                    label="Vistor_Profile"
+                    value={vistor_Profile}
+                    onChange={(e) => setvistor(e.target.value)}
+                    placeholder="Vistor_Profile"
+                    // onBlur={() => markTouched("privacy_policy")}
+                    // error={touched.privacy_policy ? errors.privacy_policy : null}
+                  />
+                
                 </div>
               </div>
             </div>

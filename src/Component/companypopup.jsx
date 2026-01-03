@@ -16,8 +16,8 @@ const InputField = ({
   label,
   value,
   onChange,
-  type = "text",
   required,
+  type = "text",
   maxLength,
   placeholder,
 }) => (
@@ -121,8 +121,11 @@ const PopupForms = ({ Close, data, onCompanyAdded }) => {
     if (form.pincode.length !== 6) return "Pincode must be 6 digits";
     if (!form.company_address.trim()) return "Address is required";
     if (!form.about_company.trim()) return "About company is required";
-    if (!websiteRegex.test(form.company_website))
+    if(form.company_website){
+if (!websiteRegex.test(form.company_website))
       return "Enter a valid website URL";
+    }
+    
     if (!form.stall_no.trim()) return "Stall number is required";
     if (!form.hall_no.trim()) return "Hall number is required";
     if (!createdBy) return "CreatedBy missing";
@@ -200,7 +203,7 @@ const PopupForms = ({ Close, data, onCompanyAdded }) => {
                 })
               }
             />
-            <InputField label="Company Website" required value={form.company_website} onChange={updateField("company_website")} />
+            <InputField label="Company Website"  value={form.company_website} onChange={updateField("company_website")} />
             <InputField label="Stall No" required value={form.stall_no} onChange={updateField("stall_no")} />
             <InputField label="Hall No" required value={form.hall_no} onChange={updateField("hall_no")} />
           </div>
