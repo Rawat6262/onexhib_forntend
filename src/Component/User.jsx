@@ -167,6 +167,12 @@ function User() {
               />
 
               {/* Add Company */}
+               <button
+                onClick={() => setShowForm(true)}
+                className="h-10 w-full sm:w-48 border border-blue-500 text-blue-500 hover:bg-blue-100 rounded-md font-semibold transition-colors"
+              >
+                + Add News
+              </button>
               <button
                 onClick={() => setShowForm(true)}
                 className="h-10 w-full sm:w-48 border border-blue-500 text-blue-500 hover:bg-blue-100 rounded-md font-semibold transition-colors"
