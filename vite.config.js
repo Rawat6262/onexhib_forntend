@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://onexhib-backend.vercel.app', // ✅ HTTPS backend  //https://onexhib-backend.vercel.app  http://localhost:8000
+        target: 'http://localhost:8000', // ✅ HTTPS backend  //https://onexhib-backend.vercel.app  http://localhost:8000
         changeOrigin: true,              // ✅ Changes host header to match target
         secure: false,                    // ✅ Verify SSL cert (set false if self-signed)
       },
